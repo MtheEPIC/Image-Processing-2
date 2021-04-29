@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 """
 The input of all the functions will be grayscale images
@@ -11,6 +12,38 @@ def get_studentID()-> int:
 	:return: ID
 	"""
 	return 212245757
+	
+def conv1D(inSignal: np.ndarray, kernel1: np.ndarray)-> np.ndarray:
+	"""
+	Convolve a 1-D array with a given kernel
+	:param inSignal: 1-D array
+	:param kernel1: 1-D array as a kernel
+	:return: The convolved array
+	"""
+	kernel1 = kernel1[::-1]
+	outSignal = np.zeros([inSignal.shape[0] + kernel1.shape[0] - 1])
+	# add edges to inSignal
+	inSignal = np.pad(inSignal, (kernel1.shape[0] - 1, kernel1.shape[0] - 1), 'constant', constant_values=(0))
+	
+	# move the flipped kernel and multiply the values of the kernel and inSignal in the given position
+	for i in range(inSignal.shape[0] - kernel1.shape[0] + 1):
+		outSignal[i] = np.dot(inSignal[i:i+kernel1.shape[0]], kernel1)
+
+	return outSignal.astype(int)
+	
+def conv2D(inImage: np.ndarray, kernel2: np.ndarray)-> np.ndarray:
+	"""
+	Convolve a 2-D array with a given kernel
+	:param inImage: 2D image
+	:param kernel2: A kernel1
+	:return: The convolved image
+	"""
+	outImage = np.zeros((inImage.shape[0]-kernel2.shape[0]+1, inImage.shape[1]-kernel2.shape[1]+1))
+	#outImage = np.pad(outImage, (1, 1), 'constant', constant_values=(0))
+	for i in range(outImage.shape[0]):
+		for j in range(outImage.shape[1]):
+			outImage[i, j] = np.multiply(inImage[i:i+kernel2.shape[0], j:j+kernel2.shape[1]], kernel2).sum()
+	return outImage
 
 def blurImage1(in_image: np.ndarray, kernel_size: np.ndarray)-> np.ndarray:
 	"""
