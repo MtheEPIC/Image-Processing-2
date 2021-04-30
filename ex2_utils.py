@@ -1,10 +1,23 @@
 import numpy as np
+import matplotlib.image as mpimg
 import cv2
 
 """
 The input of all the functions will be grayscale images
 There is no input validation
 """
+
+RGB_TO_GRAY = [0.2989, 0.5870, 0.1140]
+
+
+def load_img(filename: str)-> np.ndarray:
+	"""
+	retrun img in grayscale from the given path
+	:param filename: path as string
+	:return: loaded grayscale image
+	"""
+	img = mpimg.imread(filename) / 255
+	return np.dot(img, RGB_TO_GRAY)
 
 def get_studentID()-> int:
 	"""
@@ -38,17 +51,7 @@ def conv2D(inImage: np.ndarray, kernel2: np.ndarray)-> np.ndarray:
 	:param kernel2: A kernel1
 	:return: The convolved image
 	"""
-	#return cv2.filter2D(inImage, -1, kernel2, borderType=cv2.BORDER_REPLICATE)
-	tmp = kernel2.copy()
-	print(kernel2)
-	tmp[0, :] = kernel2[2, :]
-	tmp[2, :] = kernel2[0, :]
-	kernel2 = tmp
-	tmp = kernel2.copy()
-	tmp[:, 0] = kernel2[:, 2]
-	tmp[:, 2] = kernel2[:, 0]
-	kernel2 = tmp
-	print(kernel2)
+	kernel2 = np.flipud(np.fliplr(kernel2))
 	
 	outImage = np.zeros((inImage.shape))
 	inImage = np.pad(inImage, (kernel2.shape[0]-1, kernel2.shape[1]-1), 'constant', constant_values=(0))
@@ -56,28 +59,12 @@ def conv2D(inImage: np.ndarray, kernel2: np.ndarray)-> np.ndarray:
 	
 	for i in range(kernel2.shape[0]-1, kernel2.shape[0]-1 + outImage.shape[0]): #not padded area
 		for j in range(kernel2.shape[1]-1, kernel2.shape[1]-1 + outImage.shape[1]): #not padded area
-			#calc val
+			#calc val in cell
 			tmpImage[i, j] = np.multiply(inImage[i:i+kernel2.shape[0], j:j+kernel2.shape[1]], kernel2).sum()
-			"""
-			val = 0
-			for m in range(-kernel2.shape[0]//2, kernel2.shape[0]//2 +1):
-				for n in range(-kernel2.shape[1]//2, kernel2.shape[1]//2 +1):
-					val += kernel2[m+kernel2.shape[0]//2, n+kernel2.shape[1]//2]*inImage[i-m, j-n]
-			tmpImage[i, j] = val
-			"""
 	
+	# trim padding
 	outImage = tmpImage[kernel2.shape[0]-1: kernel2.shape[0]-1 + outImage.shape[0], kernel2.shape[1]-1: kernel2.shape[1]-1 + outImage.shape[1]]
 	return outImage
-	
-	#outImage = np.zeros((inImage.shape[0]-kernel2.shape[0]+1, inImage.shape[1]-kernel2.shape[1]+1))
-	outImage = np.zeros((inImage.shape))
-	inImage = np.pad(inImage, (1, 1), 'constant', constant_values=(0))
-	#outImage = np.pad(outImage, (1, 1), 'constant', constant_values=(0))
-	print("ddf")
-	for i in range(outImage.shape[0]):
-		for j in range(outImage.shape[1]):
-			outImage[i, j] = np.multiply(inImage[i:i+kernel2.shape[0], j:j+kernel2.shape[1]], kernel2).sum()
-	return outImage.astype(int)
 
 def convDerivative(inImage: np.ndarray) ->(np.ndarray, np.ndarray, np.ndarray, np.ndarray):
 	"""
@@ -116,7 +103,15 @@ def blurImage1(in_image: np.ndarray, kernel_size: np.ndarray)-> np.ndarray:
 	:return: The Blurred image
 	"""
 	pass
-	
+
+def PascalTriangle(n):
+	trow = [1]
+	y = [0]
+	for x in range(n):
+		print(trow)
+		trow=[left+right for left,right in zip(trow+y, y+trow)]
+	return n>=1
+
 def blurImage2(in_image: np.ndarray, kernel_size: np.ndarray)-> np.ndarray:
 	"""
 	Blur an image using a Gaussian kernel using OpenCV built-in functions
