@@ -72,25 +72,17 @@ def convDerivative(inImage: np.ndarray) ->(np.ndarray, np.ndarray, np.ndarray, n
 	:param inImage: Grayscale iamge
 	:return: (directions, magnitude, x_der, y_der)
 	"""
-	kernel = np.array([-1, 0, 1])
-	x_der = cv2.filter2D(inImage, -1, np.transpose([kernel]), borderType=cv2.BORDER_REPLICATE)
-	y_der = cv2.filter2D(inImage, -1, kernel, borderType=cv2.BORDER_REPLICATE)
-	
-	kernel_x = np.array([[1,0,-1],[2,0,-2],[1,0,-1]])
+	# kernels to get derivatives
 	kernel_y = np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
+	kernel_x = np.array([[1,0,-1],[2,0,-2],[1,0,-1]])
 	kernel_x = np.flipud(np.fliplr(kernel_x))
 	kernel_y = np.flipud(np.fliplr(kernel_y))
+	# get derivative
 	x_der = cv2.filter2D(inImage, -1, kernel_x, borderType=cv2.BORDER_REPLICATE)
 	y_der = cv2.filter2D(inImage, -1, kernel_y, borderType=cv2.BORDER_REPLICATE)
-	
-	print(x_der)
-	print(y_der)
-	
-	x_der[x_der == 0] = 1
-	print(x_der)
-	
+	# calc magnitude
 	magnitude = np.sqrt(x_der**2 + y_der**2)
-	
+	# calc directions
 	directions = np.arctan(y_der/ x_der)
 	
 	return directions, magnitude, x_der, y_der
@@ -102,15 +94,18 @@ def blurImage1(in_image: np.ndarray, kernel_size: np.ndarray)-> np.ndarray:
 	:param kernelSize: Kernel size
 	:return: The Blurred image
 	"""
-	pass
+	#kernel = PascalTriangle(kernel_size.shape[0])
+	#tmp = np.dot(np.ones((3,3)), kernel)
+	#print(np.transpose([kernel]))
+	kernel = kernel_size
+	return conv2D(in_image, kernel)
 
 def PascalTriangle(n):
 	trow = [1]
 	y = [0]
-	for x in range(n):
-		print(trow)
+	for x in range(n-1):
 		trow=[left+right for left,right in zip(trow+y, y+trow)]
-	return n>=1
+	return trow
 
 def blurImage2(in_image: np.ndarray, kernel_size: np.ndarray)-> np.ndarray:
 	"""
