@@ -38,12 +38,75 @@ def conv2D(inImage: np.ndarray, kernel2: np.ndarray)-> np.ndarray:
 	:param kernel2: A kernel1
 	:return: The convolved image
 	"""
-	outImage = np.zeros((inImage.shape[0]-kernel2.shape[0]+1, inImage.shape[1]-kernel2.shape[1]+1))
+	#return cv2.filter2D(inImage, -1, kernel2, borderType=cv2.BORDER_REPLICATE)
+	tmp = kernel2.copy()
+	print(kernel2)
+	tmp[0, :] = kernel2[2, :]
+	tmp[2, :] = kernel2[0, :]
+	kernel2 = tmp
+	tmp = kernel2.copy()
+	tmp[:, 0] = kernel2[:, 2]
+	tmp[:, 2] = kernel2[:, 0]
+	kernel2 = tmp
+	print(kernel2)
+	
+	outImage = np.zeros((inImage.shape))
+	inImage = np.pad(inImage, (kernel2.shape[0]-1, kernel2.shape[1]-1), 'constant', constant_values=(0))
+	tmpImage = np.zeros((inImage.shape))
+	
+	for i in range(kernel2.shape[0]-1, kernel2.shape[0]-1 + outImage.shape[0]): #not padded area
+		for j in range(kernel2.shape[1]-1, kernel2.shape[1]-1 + outImage.shape[1]): #not padded area
+			#calc val
+			tmpImage[i, j] = np.multiply(inImage[i:i+kernel2.shape[0], j:j+kernel2.shape[1]], kernel2).sum()
+			"""
+			val = 0
+			for m in range(-kernel2.shape[0]//2, kernel2.shape[0]//2 +1):
+				for n in range(-kernel2.shape[1]//2, kernel2.shape[1]//2 +1):
+					val += kernel2[m+kernel2.shape[0]//2, n+kernel2.shape[1]//2]*inImage[i-m, j-n]
+			tmpImage[i, j] = val
+			"""
+	
+	outImage = tmpImage[kernel2.shape[0]-1: kernel2.shape[0]-1 + outImage.shape[0], kernel2.shape[1]-1: kernel2.shape[1]-1 + outImage.shape[1]]
+	return outImage
+	
+	#outImage = np.zeros((inImage.shape[0]-kernel2.shape[0]+1, inImage.shape[1]-kernel2.shape[1]+1))
+	outImage = np.zeros((inImage.shape))
+	inImage = np.pad(inImage, (1, 1), 'constant', constant_values=(0))
 	#outImage = np.pad(outImage, (1, 1), 'constant', constant_values=(0))
+	print("ddf")
 	for i in range(outImage.shape[0]):
 		for j in range(outImage.shape[1]):
 			outImage[i, j] = np.multiply(inImage[i:i+kernel2.shape[0], j:j+kernel2.shape[1]], kernel2).sum()
-	return outImage
+	return outImage.astype(int)
+
+def convDerivative(inImage: np.ndarray) ->(np.ndarray, np.ndarray, np.ndarray, np.ndarray):
+	"""
+	Calculate gradient of an image
+	:param inImage: Grayscale iamge
+	:return: (directions, magnitude, x_der, y_der)
+	"""
+	kernel = np.array([-1, 0, 1])
+	x_der = cv2.filter2D(inImage, -1, np.transpose([kernel]), borderType=cv2.BORDER_REPLICATE)
+	y_der = cv2.filter2D(inImage, -1, kernel, borderType=cv2.BORDER_REPLICATE)
+	
+	kernel_x = np.array([[1,0,-1],[2,0,-2],[1,0,-1]])
+	kernel_y = np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
+	kernel_x = np.flipud(np.fliplr(kernel_x))
+	kernel_y = np.flipud(np.fliplr(kernel_y))
+	x_der = cv2.filter2D(inImage, -1, kernel_x, borderType=cv2.BORDER_REPLICATE)
+	y_der = cv2.filter2D(inImage, -1, kernel_y, borderType=cv2.BORDER_REPLICATE)
+	
+	print(x_der)
+	print(y_der)
+	
+	x_der[x_der == 0] = 1
+	print(x_der)
+	
+	magnitude = np.sqrt(x_der**2 + y_der**2)
+	
+	directions = np.arctan(y_der/ x_der)
+	
+	return directions, magnitude, x_der, y_der
 
 def blurImage1(in_image: np.ndarray, kernel_size: np.ndarray)-> np.ndarray:
 	"""
@@ -61,7 +124,8 @@ def blurImage2(in_image: np.ndarray, kernel_size: np.ndarray)-> np.ndarray:
 	:param kernelSize: Kernel size
 	:return: The Blurred image
 	"""
-	pass
+	kernel = cv2.getGaussianKernel(kernel_size.shape[0], 1)
+	return cv2.filter2D(in_image, -1, kernel, borderType=cv2.BORDER_REPLICATE)
 	
 def edgeDetectionSobel(img: np.ndarray, thresh: float = 0.7)-> (np.ndarray, np.ndarray):
 	"""
@@ -70,7 +134,8 @@ def edgeDetectionSobel(img: np.ndarray, thresh: float = 0.7)-> (np.ndarray, np.n
 	:param thresh: The minimum threshold for the edge response
 	:return: opencv solution, my implementation
 	"""
-	pass
+	Gx = np.dot(img, [-1, 0, 1])
+	return img
 
 def edgeDetectionZeroCrossingSimple(img: np.ndarray)-> (np.ndarray):
 	"""
