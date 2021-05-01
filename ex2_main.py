@@ -7,10 +7,10 @@ def main():
 	studentID()
 	#conv1Demo()
 	#conv2Demo()
-	derivDemo()
-	#blurDemo()
+	#derivDemo()
 	#edgeDemo()
-	#houghDemo()
+	#blurDemo()
+	houghDemo()
 
 def studentID():
 	print(get_studentID())
@@ -24,32 +24,23 @@ def conv1Demo():
 	
 def conv2Demo():
 	img_path = "data/beach.jpg"
-	img = cv2.imread(img_path, 0)
-	kernel = np.array([[0.0, -1.0, 0.0], 
-						[-1.0, 4.0, -1.0],
-						[0.0, -1.0, 0.0]])
+	img = load_img(img_path)
 	kernel = np.array([[0, -1, 0], 
 						[-1, 4, -1],
 						[0, -1, 0]])
-	img_rst = cv2.filter2D(img, -1, kernel, borderType=cv2.BORDER_REPLICATE)
-	
+	arr =np.zeros(shape=(5,5))
+	for i in range(5):
+		for j in range(5):
+			arr[i][j]=(j+1)+i*5
+	img = arr
+	conv2D_cv2 = cv2.filter2D(img, -1, kernel, borderType=cv2.BORDER_REPLICATE)
 	conv2D_output = conv2D(img, kernel)
 	
-	#print(conv2D_output.shape)
-	
-	print(img)
-	print(kernel)
-	#print((conv2D_output == img_rst).all())
-	cv2.imshow("cv", img_rst)
+	cv2.imshow("cv", conv2D_cv2)
 	cv2.imshow("custom", conv2D_output)
-	print(img_rst)
-	print(conv2D_output)
-	#conv2D_output = conv2D_output - np.min(conv2D_output)
-	#conv2D_output = conv2D_output / (np.max(conv2D_output)/ 255)
-	#conv2D_output = conv2D_output.astype(int)
-	#print(np.max(conv2D_output))
-	#cv2.imshow("custom", conv2D_output)
-	#print(conv2D_output)
+	print("cv2: \n" + str(conv2D_cv2))
+	print("custom: \n" + str(conv2D_output))
+	print((conv2D_output.astype('float16') == conv2D_cv2.astype('float16')).all())
 	cv2.waitKey()
 	
 def derivDemo():
@@ -58,39 +49,50 @@ def derivDemo():
 	directions, magnitude, x_der, y_der = convDerivative(img)
 	cv2.imshow("x_der", x_der)
 	cv2.imshow("y_der", y_der)
-	#cv2.imshow("magnitude", magnitude)
+	cv2.imshow("magnitude", magnitude)
 	cv2.imshow("directions", directions)
 	cv2.waitKey()
 	
 def blurDemo():
 	img_path = "data/pool_balls.jpeg"
-	img = cv2.imread(img_path, 0)
+	img = load_img(img_path)
 	kernel = 1/16 * np.array([[1, 2, 1], 
 							[2, 4, 2],
 							[1, 2, 1]])
 						
+	custom = blurImage1(img, kernel)
 	opencv = blurImage2(img, kernel)
+	cv2.imshow("custom", custom)
 	cv2.imshow("opencv", opencv)
 	cv2.imshow("orig", img)
-	#print(cv2.getGaussianKernel(3, 1))
 	cv2.waitKey()
 	
 def edgeDemo():
 	img_path = "data/codeMonkey.jpeg"
 	img = cv2.imread(img_path, 0)
+	img_scaled = load_img(img_path)
 	
-	sobel_64 = cv2.Sobel(img,cv2.CV_64F,1,0,ksize=3)
-	abs_64 = np.absolute(sobel_64)
-	sobel_8u = np.uint8(abs_64)
+	edges_sobel_opencv, edges_sobel = edgeDetectionSobel(img, 20)
+	edges_canny = edgeDetectionCanny(img, 20, 50)
+	edges_zerocross = edgeDetectionZeroCrossingSimple(img_scaled)
 	
-	#edges = edgeDetectionSobel(img)
-	
-	#cv2.imshow("custom", edges)
-	cv2.imshow("custom", sobel_8u)
+	cv2.imshow("ZeroCrossingSimple", edges_zerocross)
+	cv2.imshow("edgeDetectionCanny", edges_canny)
+	cv2.imshow("Sobel mine", edges_sobel)
+	cv2.imshow("Sobel opencv", edges_sobel_opencv)
 	cv2.waitKey()
 	
 def houghDemo():
-	pass
+	img_path = "data/coins.jpg"
+	img = cv2.imread(img_path, 0)
+	
+	circles = houghCircle(img, 5, 10)
+	
+	plt.imshow(img)
+	for circle in circles:
+		cc = plt.Circle((circle[0], circle[1]), circle[2]) 
+		plt.gca().add_artist(cc)
+	plt.show()
 
 if __name__ == '__main__':
 	main()
